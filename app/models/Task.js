@@ -4,6 +4,7 @@ var Schema       = mongoose.Schema;
 var TaskSchema   = new Schema({
     name: {type: String},
     description: {type: String},
+    project:{type:String},
     state: {type: String},
     priority: {type: String},
     created: {type: String},

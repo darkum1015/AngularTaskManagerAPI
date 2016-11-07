@@ -68,30 +68,16 @@ apiRoutes.post('/authenticate', function(req, res) {
     });
 });
 
-apiRoutes.route('/tasks').post(function(req,res){
-    var task = new Task();
+apiRoutes.options('*',function (req, res, next) {
+    res.status(200).send();
 
-    task.name = req.body.name;
-    task.description = req.body.description;
-    task.state = req.body.state;
-    task.priority = req.body.priority;
-    task.created = req.body.created;
-    task.createdBy = req.body.createdBy;
-    task.assignedTo = req.body.assignedTo;
-    task.startDate = req.body.startDate;
-    task.duration = req.body.duration;
-
-    // set the bears name (comes from the request)
-
-    // save the bear and check for errors
-    task.save(function(err) {
-        if (err)
-            res.send(err);
-
-        res.json({ message: 'Task created!' });
+});
+apiRoutes.get('/users', function(req, res) {
+    User.find({}, function(err, users) {
+        res.json(users);
     });
-
-}).get(function(req, res) {
+});
+apiRoutes.route('/tasks').get(function(req, res) {
     Task.find(function(err, tasks) {
         if (err)
             res.send(err);
@@ -100,6 +86,107 @@ apiRoutes.route('/tasks').post(function(req,res){
     });
 });
 
+// route middleware to verify a token
+apiRoutes.use(function(req, res, next) {
+
+    // check header or url parameters or post parameters for token
+    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+    // decode token
+    if (token) {
+
+        // verifies secret and checks exp
+        jwt.verify(token, app.get('superSecret'), function(err, decoded) {
+            if (err) {
+                return res.json({ success: false, message: 'Failed to authenticate token.' });
+            } else {
+                // if everything is good, save to request for use in other routes
+                req.decoded = decoded;
+                next();
+            }
+        });
+
+    } else {
+
+        // if there is no token
+        // return an error
+        return res.status(403).send({
+            success: false,
+            message: 'No token provided.'
+        });
+
+    }
+});
+
+
+
+apiRoutes.route('/tasks').post(function(req,res){
+    var task = new Task();
+
+    task.name = req.body[0].name;
+    task.description = req.body[0].description;
+    task.state = req.body[0].state;
+    task.priority = req.body[0].priority;
+    task.created = req.body[0].created;
+    task.createdBy = req.body[0].createdBy;
+    task.assignedTo = req.body[0].assignedTo;
+    task.startDate = req.body[0].startDate;
+    task.duration = req.body[0].duration;
+    task.project = req.body[0].project;
+
+
+    task.save(function(err) {
+        if (err)
+            res.send(err);
+
+        res.json({success: true, message: 'Task created!' });
+    });
+
+});
+
+
+apiRoutes.route('/tasks/:task_id').delete(function (req,res) {
+    Task.remove({
+        _id: req.params.task_id
+    }, function (err, bear) {
+        if (err)
+            res.send(err);
+
+        res.json({success: true,message: 'Successfully deleted'});
+    });
+}).get(function(req,res){
+    Task.findById(req.params.task_id, function(err, task) {
+        if (err)
+            res.send(err);
+        res.json({success: true, rows : task});
+    });
+}).put(function(req,res){
+    Task.findById(req.params.task_id, function(err, task) {
+        if (err)
+            res.send(err);
+
+        task.name = req.body[0].name;
+        task.description = req.body[0].description;
+        task.state = req.body[0].state;
+        task.priority = req.body[0].priority;
+        task.created = req.body[0].created;
+        task.createdBy = req.body[0].createdBy;
+        task.assignedTo = req.body[0].assignedTo;
+        task.startDate = req.body[0].startDate;
+        task.duration = req.body[0].duration;
+        task.project = req.body[0].project;
+
+
+        // save the bear
+        task.save(function(err) {
+            if (err)
+                res.send(err);
+
+            res.json({success: true, message: 'Task updated!' });
+        });
+    });
+
+});
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-access-token");
