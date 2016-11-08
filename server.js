@@ -27,6 +27,24 @@ app.use(bodyParser.json());
 // use morgan to log requests to the console
 app.use(morgan('dev'));
 
+/*app.post('/setup', function(req, res) {
+
+
+
+    var newUser = new User({
+        displayName: req.body.displayName,
+        name:req.body.name,
+        password:req.body.password,
+        admin:req.body.admin
+    })
+
+    newUser.save(function(err) {
+        if (err) throw err;
+
+        console.log('User saved successfully');
+        res.json({ success: true });
+    });
+});*/
 
 var apiRoutes = express.Router();
 
@@ -72,9 +90,26 @@ apiRoutes.options('*',function (req, res, next) {
     res.status(200).send();
 
 });
-apiRoutes.get('/users', function(req, res) {
+
+
+
+apiRoutes.route('/users').get(function(req, res) {
     User.find({}, function(err, users) {
         res.json(users);
+    });
+}).put(function (req,res){
+    var newUser = new User({
+        displayName: req.body.displayName,
+        name:req.body.name,
+        password:req.body.password,
+        admin:req.body.admin
+    })
+
+    newUser.save(function(err) {
+        if (err) throw err;
+
+        console.log('User created successfully');
+        res.json({ success: true });
     });
 });
 apiRoutes.route('/tasks').get(function(req, res) {
