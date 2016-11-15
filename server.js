@@ -11,7 +11,8 @@ var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./app/config'); // get our config file
 
 var Task   = require('./app/models/Task');
-var User = require('./app/models/User')
+var User = require('./app/models/User');
+var Project = require('./app/models/Project');
 
 // =======================
 // configuration =========
@@ -112,6 +113,28 @@ apiRoutes.route('/users').get(function(req, res) {
         res.json({ success: true });
     });
 });
+
+apiRoutes.route('/projects').get(function (req,res) {
+    Project.find({},function (err, projects) {
+        res.json(projects);
+    })
+}).post(function (req,res) {
+    var newProject = new Project({
+        duration: req.body.duration,
+        name: req.body.name,
+        tasks: req.body.tasks
+    });
+    newProject.markModified('tasks');
+    newProject.save(function (err) {
+        if(err) throw err;
+
+        console.log('Project created successfully');
+        res.json({success: true,message: "Project created successfully"});
+
+
+    })
+})
+
 apiRoutes.route('/tasks').get(function(req, res) {
     Task.find(function(err, tasks) {
         if (err)
